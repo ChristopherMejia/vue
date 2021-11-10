@@ -13,7 +13,7 @@ Vue.component('CoinDetail', {
     toggleShowPrices(){
       this.showPrices = !this.showPrices;
 
-      this.$emit('change-color', 'FF96C8')
+      this.$emit('change-color')
     }
   },
 
