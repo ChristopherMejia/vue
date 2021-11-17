@@ -7,10 +7,10 @@
       <div class="flex flex-col sm:flex-row justify-around items-center">
         <div class="flex flex-col items-center">
           <img 
-            :src="`https://static.coincap.io/assets/icons/${asset.symbol.toLowerCase()}@2x.png`" 
             :alt="asset.name"
             class="w-20 h-20 mr-5"
             />
+            <!-- :src="`https://static.coincap.io/assets/icons/${asset.symbol.toLowerCase()}@2x.png`"  -->
           <h1 class="text-gray-500 text-5xl">
               {{ asset.name }}
             <small class="sm:mr-2 text-gray-500"> {{ asset.symbol }} </small>
@@ -70,6 +70,26 @@
         :max="max"
         :data="history.map( h => [h.date, parseFloat(h.priceUsd).toFixed(2)])"
       />
+
+      <h3 class="text-xl my-10 text-white">Mejores Ofertas de Cambio</h3>
+      <table>
+        <tr v-for="m in markets" :key="`${m.exchangeId}-${m.priceUsd}`" class="border-b">
+          <td class="text-white">
+            <b> {{ m.exchangeId}}</b>
+          </td>
+          <td class="text-white"> {{ dollarFilter(m.priceUsd) }} </td>
+          <td class="text-white"> {{ m.baseSymbol }} / {{m.quoteSymbol}} </td>
+          <td class="text-white">
+            <px-button v-if="!m.url" @click="getWebSite(m)">
+              <slot> Obtener Link </slot>
+            </px-button>
+            <a v-else class="hover:underline text-green-600" target="_blanck">
+              {{m.url}}
+            </a>
+          </td>
+        </tr>
+      </table>
+
     </template>
   </div>
 </template>
@@ -78,18 +98,20 @@
     import api from '../api'
     import { dollarFilter, percentFilter } from "@/filters";
     import PulseLoader from 'vue-spinner/src/PulseLoader.vue';
+    import PxButton from '@/components/PxButton';
 
 
 
     export default {
         name: 'CoinDetail',
-        components: { PulseLoader },
+        components: { PulseLoader, PxButton },
 
         data(){
             return {
                 isLoading: false, 
                 asset: {},
-                history: []
+                history: [],
+                markets: []
             }
         },
 
@@ -123,16 +145,25 @@
         },
 
         methods: {
+            getWebSite(exchange) {
+              return api.getExchange(exchange.exchangeId)
+                .then(res => {
+                  exchange.url = res.exchangeUrl
+                })
+            },
+
             getCoin() {
                 const id = this.$route.params.id //$route es una caracteristica del router que nos permite obtener los parametros, la ruta, etc.
                 this.isLoading = true
                 Promise.all([
                     api.getAsset(id),
                     api.getAssetHistory(id),
+                    api.getMarkets(id),
                 ])
-                .then(([asset, history]) => {
+                .then(([asset, history, markets]) => {
                     this.asset = asset,
                     this.history = history
+                    this.markets = markets
                 })
                 .finally( () => this.isLoading = false)
             }

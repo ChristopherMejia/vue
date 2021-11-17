@@ -58,7 +58,7 @@
 
 <script>
 import { dollarFilter, percentFilter } from "@/filters";
-import {PxButton} from "../components/PxButton"
+import PxButton from "../components/PxButton"
 
 export default {
   name: "PxAssetsTable",
